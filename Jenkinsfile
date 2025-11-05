@@ -11,7 +11,7 @@ pipeline {
         echo '📥 Pulling latest code from GitHub...'
         // 🚨 FIX: Explicitly specify the 'main' branch to prevent the revision error.
         git url: 'https://github.com/himaja-56/Social_Media.git', 
-            branch: 'main'
+             branch: 'main'
       }
     }
 
@@ -29,8 +29,15 @@ pipeline {
       steps {
         echo '🚀 Starting Docker containers...'
         script {
-          // 💡 BEST PRACTICE: Use 'docker-compose'
-          bat 'docker-compose -f %DOCKER_COMPOSE_PATH% up -d'
+          // 🔒 CRITICAL FIX: Inject credentials securely from Jenkins storage
+          withCredentials([
+            // Maps Jenkins credential ID to an environment variable name Docker Compose will use
+            string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET'),
+            string(credentialsId: 'MONGODB_URI_SECRET', variable: 'MONGODB_URI')
+          ]) {
+            // Docker Compose will pick up JWT_SECRET and MONGODB_URI from the host environment
+            bat 'docker-compose -f %DOCKER_COMPOSE_PATH% up -d'
+          }
         }
       }
     }
@@ -39,8 +46,8 @@ pipeline {
       steps {
         echo '🩺 Checking if frontend and backend are up...'
         script {
-          // NOTE: 'curl' must be installed on the Jenkins agent for this to work.
-          bat 'curl -I http://localhost:4173 || echo "⚠️ Frontend not reachable"'
+          // 💡 FIX: Check frontend on the correct development port (5173)
+          bat 'curl -I http://localhost:5173 || echo "⚠️ Frontend not reachable"'
           bat 'curl -I http://localhost:5000 || echo "⚠️ Backend not reachable"'
         }
       }
