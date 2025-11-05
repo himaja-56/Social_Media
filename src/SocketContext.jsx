@@ -6,14 +6,16 @@ export const SocketContext = createContext();
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(API_URL, {
       auth: { token: localStorage.getItem('token') },
     });
     setSocket(newSocket);
 
     return () => newSocket.close();
-  }, []);
+  }, [API_URL]); // dependency ensures reconnection if env changes
 
   return (
     <SocketContext.Provider value={socket}>
