@@ -12,10 +12,13 @@ services:
 
   frontend:
     build: .
+    # 💡 Changed to the standard dev port (5173) and exposed it
     ports:
-      - "4173:4173"
-    command: ["npm", "run", "preview", "--", "--host"]
+      - "5173:5173"
+    # 🛠️ Changed 'preview' to 'dev' to match your local command
+    command: ["npm", "run", "dev", "--", "--host"]
     environment:
-      - VITE_API_URL=http://localhost:5000
+      # ⚠️ CRITICAL FIX: Use the service name 'backend' instead of 'localhost'
+      - VITE_API_URL=http://backend:5000
     depends_on:
       - backend
