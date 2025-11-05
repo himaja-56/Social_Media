@@ -15,9 +15,11 @@ pipeline {
     stage('Install Dependencies') {
       steps {
         echo 'Installing dependencies for backend and frontend...'
-        sh '''
-          cd backend && npm install
-          cd ../frontend && npm install
+        bat '''
+          cd backend
+          npm install
+          cd ..
+          npm install
         '''
       }
     }
@@ -25,9 +27,8 @@ pipeline {
     stage('Build Frontend') {
       steps {
         echo 'Building frontend...'
-        sh '''
-          cd frontend
-          npm run build || echo "Dev mode only, skipping build..."
+        bat '''
+          npm run build || echo "Running in dev mode, skipping build..."
         '''
       }
     }
@@ -35,10 +36,10 @@ pipeline {
     stage('Run Backend') {
       steps {
         echo 'Starting backend server...'
-        sh '''
+        bat '''
           cd backend
-          nohup node server.js &
-          sleep 5
+          start /B node server.js
+          timeout /T 5
         '''
       }
     }
@@ -46,10 +47,9 @@ pipeline {
     stage('Run Frontend Dev Server') {
       steps {
         echo 'Starting frontend dev server...'
-        sh '''
-          cd frontend
-          nohup npm run dev &
-          sleep 10
+        bat '''
+          start /B npm run dev
+          timeout /T 10
         '''
       }
     }
@@ -57,8 +57,10 @@ pipeline {
     stage('Health Check') {
       steps {
         echo 'Verifying servers are running...'
-        sh 'curl -I http://localhost:5173 || echo "Frontend not responding"'
-        sh 'curl -I http://localhost:5000 || echo "Backend not responding"'
+        bat '''
+          curl -I http://localhost:5173
+          curl -I http://localhost:5000
+        '''
       }
     }
   }
