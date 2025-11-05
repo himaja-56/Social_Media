@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm rebuild esbuild && npm run build
+# 🛠️ FIX: Clean slate installation after copying all files
+RUN rm -rf node_modules && npm install
+RUN npm run build
 EXPOSE 5173
 CMD ["npm", "run", "preview"]
