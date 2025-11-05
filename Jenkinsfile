@@ -2,76 +2,52 @@ pipeline {
   agent any
 
   environment {
-    NODE_ENV = 'development'
+    DOCKER_COMPOSE_PATH = 'docker-compose.yml'
   }
 
   stages {
     stage('Checkout Code') {
       steps {
-        checkout scm
+        echo '📥 Pulling latest code from GitHub...'
+        git 'https://github.com/himaja-56/Social_Media.git'
       }
     }
 
-    stage('Install Dependencies') {
+    stage('Build Docker Images') {
       steps {
-        echo 'Installing dependencies for backend and frontend...'
-        bat '''
-          cd backend
-          npm install
-          cd ..
-          npm install
-        '''
+        echo '🐳 Building Docker images...'
+        script {
+          bat 'docker compose -f %DOCKER_COMPOSE_PATH% build --no-cache'
+        }
       }
     }
 
-    stage('Build Frontend') {
+    stage('Run Containers') {
       steps {
-        echo 'Building frontend...'
-        bat '''
-          call npm install vite --save-dev
-          call npx vite build || echo "Running in dev mode, skipping build..."
-        '''
-      }
-    }
-
-    stage('Run Backend') {
-      steps {
-        echo 'Starting backend server...'
-        bat '''
-          cd backend
-          start "" node server.js
-          ping 127.0.0.1 -n 6 >nul
-        '''
-      }
-    }
-
-    stage('Run Frontend Dev Server') {
-      steps {
-        echo 'Starting frontend dev server...'
-        bat '''
-          start "" npm run dev
-          ping 127.0.0.1 -n 11 >nul
-        '''
+        echo '🚀 Starting Docker containers...'
+        script {
+          bat 'docker compose -f %DOCKER_COMPOSE_PATH% up -d'
+        }
       }
     }
 
     stage('Health Check') {
       steps {
-        echo 'Checking if servers are responding...'
-        bat '''
-          curl -I http://localhost:5173 || echo "Frontend not reachable"
-          curl -I http://localhost:5000 || echo "Backend not reachable"
-        '''
+        echo '🩺 Checking if frontend and backend are up...'
+        script {
+          bat 'curl -I http://localhost:4173 || echo "⚠️ Frontend not reachable"'
+          bat 'curl -I http://localhost:5000 || echo "⚠️ Backend not reachable"'
+        }
       }
     }
   }
 
   post {
     success {
-      echo '✅ Jenkins pipeline completed successfully!'
+      echo '✅ Jenkins pipeline completed successfully with Docker!'
     }
     failure {
-      echo '❌ Pipeline failed. Check the console output for details.'
+      echo '❌ Deployment failed. Please check logs in Jenkins console.'
     }
   }
 }
