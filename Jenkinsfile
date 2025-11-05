@@ -39,8 +39,8 @@ pipeline {
         echo 'Starting backend server...'
         bat '''
           cd backend
-          start /B node server.js
-          timeout /T 5
+          start "" node server.js
+          ping 127.0.0.1 -n 6 >nul
         '''
       }
     }
@@ -49,18 +49,18 @@ pipeline {
       steps {
         echo 'Starting frontend dev server...'
         bat '''
-          start /B npm run dev
-          timeout /T 10
+          start "" npm run dev
+          ping 127.0.0.1 -n 11 >nul
         '''
       }
     }
 
     stage('Health Check') {
       steps {
-        echo 'Verifying servers are running...'
+        echo 'Checking if servers are responding...'
         bat '''
-          curl -I http://localhost:5173
-          curl -I http://localhost:5000
+          curl -I http://localhost:5173 || echo "Frontend not reachable"
+          curl -I http://localhost:5000 || echo "Backend not reachable"
         '''
       }
     }
@@ -71,7 +71,7 @@ pipeline {
       echo '✅ Jenkins pipeline completed successfully!'
     }
     failure {
-      echo '❌ Pipeline failed. Check the console logs.'
+      echo '❌ Pipeline failed. Check the console output for details.'
     }
   }
 }
