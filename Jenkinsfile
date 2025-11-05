@@ -32,8 +32,8 @@ pipeline {
           // 🔒 CRITICAL FIX: Inject credentials securely from Jenkins storage
           withCredentials([
             // Maps Jenkins credential ID to an environment variable name Docker Compose will use
-            string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET'),
-            string(credentialsId: 'MONGODB_URI_SECRET', variable: 'MONGODB_URI')
+            string(credentialsId: "JWT_SECRET_KEY", variable: 'JWT_SECRET'),
+            string(credentialsId: "MONGODB_URI_SECRET", variable: 'MONGODB_URI')
           ]) {
             // Docker Compose will pick up JWT_SECRET and MONGODB_URI from the host environment
             bat 'docker-compose -f %DOCKER_COMPOSE_PATH% up -d'
