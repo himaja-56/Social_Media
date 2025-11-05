@@ -28,7 +28,7 @@ pipeline {
       steps {
         echo 'Building frontend...'
         bat '''
-          npm run build || echo "Running in dev mode, skipping build..."
+          npx vite build || echo "Running in dev mode, skipping build..."
         '''
       }
     }
