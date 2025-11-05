@@ -28,7 +28,8 @@ pipeline {
       steps {
         echo 'Building frontend...'
         bat '''
-          npx vite build || echo "Running in dev mode, skipping build..."
+          call npm install vite --save-dev
+          call npx vite build || echo "Running in dev mode, skipping build..."
         '''
       }
     }
