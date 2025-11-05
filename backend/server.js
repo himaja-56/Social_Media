@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
@@ -12,41 +13,59 @@ import setupSocket from "./socket.js";
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Middleware
+// 🔹 Enable JSON parsing
 app.use(express.json());
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'], // Allow both origins
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true, // Allow cookies/auth headers if needed
-}));
 
-// Serve static files from /uploads
+// 🔹 CORS setup — allow frontend (Vite) origin
+app.use(
+  cors({
+    origin: [
+      "http://localhost:4173", // Vite preview server
+      "http://localhost:5173", // Vite dev server
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
+  })
+);
+
+// 🔹 Static file handling
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+// 🔹 API routes
 app.use("/api/auth", authRoutes);
-import messageRoutes from "./routes/messageRoutes.js";
 app.use("/api/messages", messageRoutes);
 
-const PORT = process.env.PORT || 5000;
+// 🔹 Create HTTP server for Socket.io
+const server = http.createServer(app);
 
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// 🔹 Setup Socket.io (CORS must match frontend)
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:4173", // frontend port
+      "http://localhost:5173",
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
+// Pass the `io` instance to socket setup file
+setupSocket(io);
+
+// 🔹 Connect DB and start server
 const startServer = async () => {
   try {
     await connectDB();
-
-    const server = http.createServer(app);
-    setupSocket(server);
-
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
+    server.listen(PORT, () =>
+      console.log(`🚀 Server running on http://localhost:${PORT}`)
+    );
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error("❌ Failed to start server:", error);
     process.exit(1);
   }
 };

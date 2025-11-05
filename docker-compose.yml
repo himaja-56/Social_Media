@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: social_media_backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    restart: always
+
+  frontend:
+    build: .
+    ports:
+      - "4173:4173"
+    command: ["npm", "run", "preview", "--", "--host"]
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
